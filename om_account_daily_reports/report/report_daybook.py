@@ -1,5 +1,5 @@
 import time
-from odoo import api, models, _
+from odoo import api, models, fields, _
 from odoo.exceptions import UserError
 from datetime import timedelta, datetime
 
@@ -78,8 +78,8 @@ class ReportDayBook(models.AbstractModel):
         docs = self.env[model].browse(self.env.context.get('active_ids', []))
         form_data = data['form']
 
-        date_from = form_data['date_from']
-        date_to = form_data['date_to']
+        date_from = fields.Date.from_string(form_data['date_from'])
+        date_to = fields.Date.from_string(form_data['date_to'])
         codes = []
 
         if data['form'].get('journal_ids', False):
