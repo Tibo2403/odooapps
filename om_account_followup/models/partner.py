@@ -235,7 +235,6 @@ class ResPartner(models.Model):
                 _("The partner does not have any accounting entries to "
                   "print in the overdue report for the current company."))
         self.message_post(body=_('Printed overdue payments report'))
-        self.message_post(body=_('Printed overdue payments report'))
 
         wizard_partner_ids = [self.id * 10000 + company_id]
         followup_ids = self.env['followup.followup'].search(
