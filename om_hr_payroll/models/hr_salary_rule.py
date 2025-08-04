@@ -199,15 +199,28 @@ class HrSalaryRule(models.Model):
         else:
             try:
                 safe_eval(self.amount_python_compute, localdict, mode='exec', nocopy=True)
-                return float(localdict['result']), 'result_qty' in localdict and localdict['result_qty'] or 1.0, 'result_rate' in localdict and localdict['result_rate'] or 100.0
+                result = localdict['result']
+                if not isinstance(result, float):
+                    raise UserError(
+                        _('Wrong python code result type for salary rule %s (%s): expected float, got %s')
+                        % (self.name, self.code, type(result).__name__)
+                    )
+                return (
+                    float(result),
+                    'result_qty' in localdict and localdict['result_qty'] or 1.0,
+                    'result_rate' in localdict and localdict['result_rate'] or 100.0,
+                )
             except Exception as ex:
-                raise UserError(_(
+                raise UserError(
+                    _(
                         """
                         Wrong python code defined for salary rule %s (%s).
                         Here is the error received:
                         %s
                         """
-                    ) % (self.name, self.code, repr(ex)))
+                    )
+                    % (self.name, self.code, repr(ex))
+                )
 
     def _satisfy_condition(self, localdict):
         """
