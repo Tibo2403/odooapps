@@ -354,8 +354,11 @@ class ResConfigSettings(models.TransientModel):
         for rec in ids:
             try:
                 rec._compute_complete_name()
-            except:
-                pass
+            except Exception as e:
+                logging.getLogger(__name__).warning(
+                    'Error computing complete name for product category %s: %s', rec, e
+                )
+                # Ignoring error to continue processing other categories
         try:
             ids = self.env['stock.location'].search([
                 ('location_id', '!=', False),
@@ -363,6 +366,9 @@ class ResConfigSettings(models.TransientModel):
             ], order='complete_name')
             for rec in ids:
                 rec._compute_complete_name()
-        except:
-            pass
+        except Exception as e:
+            logging.getLogger(__name__).warning(
+                'Error computing complete name for stock locations: %s', e
+            )
+            # Ignoring error to allow subsequent operations
         return True

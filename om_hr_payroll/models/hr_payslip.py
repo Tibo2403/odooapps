@@ -146,24 +146,6 @@ class HrPayslip(models.Model):
             raise UserError(_('You cannot delete a payslip which is not draft or cancelled!'))
         return super(HrPayslip, self).unlink()
 
-    # TODO move this function into hr_contract module, on hr.employee object
-    @api.model
-    def get_contract(self, employee, date_from, date_to):
-        """
-        @param employee: recordset of employee
-        @param date_from: date field
-        @param date_to: date field
-        @return: returns the ids of all the contracts for the given employee that need to be considered for the given dates
-        """
-        # a contract is valid if it ends between the given dates
-        clause_1 = ['&', ('date_end', '<=', date_to), ('date_end', '>=', date_from)]
-        # OR if it starts between the given dates
-        clause_2 = ['&', ('date_start', '<=', date_to), ('date_start', '>=', date_from)]
-        # OR if it starts before the date_from and finish after the date_end (or never finish)
-        clause_3 = ['&', ('date_start', '<=', date_from), '|', ('date_end', '=', False), ('date_end', '>=', date_to)]
-        clause_final = [('employee_id', '=', employee.id), ('state', '=', 'open'), '|', '|'] + clause_1 + clause_2 + clause_3
-        return self.env['hr.contract'].search(clause_final).ids
-
     def compute_sheet(self):
         for payslip in self:
             number = payslip.number or self.env['ir.sequence'].next_by_code('salary.slip')
@@ -171,8 +153,9 @@ class HrPayslip(models.Model):
             payslip.line_ids.unlink()
             # set the list of contract for which the rules have to be applied
             # if we don't give the contract, then the rules to apply should be for all current contracts of the employee
-            contract_ids = payslip.contract_id.ids or \
-                self.get_contract(payslip.employee_id, payslip.date_from, payslip.date_to)
+            contract_ids = payslip.contract_id.ids or self.env['hr.contract'].get_contract(
+                payslip.employee_id, payslip.date_from, payslip.date_to
+            )
             if not contract_ids:
                 raise ValidationError(_("No running contract found for the employee: %s or no contract in the given period" % payslip.employee_id.name))
             lines = [(0, 0, line) for line in self._get_payslip_lines(contract_ids, payslip.id)]
@@ -239,8 +222,8 @@ class HrPayslip(models.Model):
     def get_inputs(self, contracts, date_from, date_to):
         res = []
 
-        structure_ids = contracts.get_all_structures()
-        rule_ids = self.env['hr.payroll.structure'].browse(structure_ids).get_all_rules()
+        structures = contracts.get_all_structures()
+        rule_ids = structures.get_all_rules()
         sorted_rule_ids = [id for id, sequence in sorted(rule_ids, key=lambda x:x[1])]
         inputs = self.env['hr.salary.rule'].browse(sorted_rule_ids).mapped('input_ids')
 
@@ -341,11 +324,11 @@ class HrPayslip(models.Model):
         #get the ids of the structures on the contracts and their parent id as well
         contracts = self.env['hr.contract'].browse(contract_ids)
         if len(contracts) == 1 and payslip.struct_id:
-            structure_ids = list(set(payslip.struct_id._get_parent_structure().ids))
+            structures = payslip.struct_id._get_parent_structure()
         else:
-            structure_ids = contracts.get_all_structures()
+            structures = contracts.get_all_structures()
         #get the rules of the structure and thier children
-        rule_ids = self.env['hr.payroll.structure'].browse(structure_ids).get_all_rules()
+        rule_ids = structures.get_all_rules()
         #run the rules by sequence
         sorted_rule_ids = [id for id, sequence in sorted(rule_ids, key=lambda x:x[1])]
         sorted_rules = self.env['hr.salary.rule'].browse(sorted_rule_ids)
@@ -429,15 +412,15 @@ class HrPayslip(models.Model):
         })
 
         if not self.env.context.get('contract'):
-            #fill with the first contract of the employee
-            contract_ids = self.get_contract(employee, date_from, date_to)
+            # fill with the first contract of the employee
+            contract_ids = self.env['hr.contract'].get_contract(employee, date_from, date_to)
         else:
             if contract_id:
-                #set the list of contract for which the input have to be filled
+                # set the list of contract for which the input have to be filled
                 contract_ids = [contract_id]
             else:
-                #if we don't give the contract, then the input to fill should be for all current contracts of the employee
-                contract_ids = self.get_contract(employee, date_from, date_to)
+                # if we don't give the contract, then the input to fill should be for all current contracts of the employee
+                contract_ids = self.env['hr.contract'].get_contract(employee, date_from, date_to)
 
         if not contract_ids:
             return res
@@ -477,7 +460,7 @@ class HrPayslip(models.Model):
         self.company_id = employee.company_id
 
         if not self.env.context.get('contract') or not self.contract_id:
-            contract_ids = self.get_contract(employee, date_from, date_to)
+            contract_ids = self.env['hr.contract'].get_contract(employee, date_from, date_to)
             if not contract_ids:
                 return
             self.contract_id = self.env['hr.contract'].browse(contract_ids[0])

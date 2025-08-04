@@ -39,10 +39,7 @@ class HrContract(models.Model):
                  then first level children and so on) and without duplicata
         """
         structures = self.mapped('struct_id')
-        if not structures:
-            return []
-        # YTI TODO return browse records
-        return list(set(structures._get_parent_structure().ids))
+        return structures._get_parent_structure()
 
     def get_attribute(self, code, attribute):
         return self.env['hr.contract.advantage.template'].search([('code', '=', code)], limit=1)[attribute]
@@ -54,6 +51,36 @@ class HrContract(models.Model):
                 contract[code] = value
             else:
                 contract[code] = 0.0
+
+    @api.model
+    def get_contract(self, employee, date_from, date_to):
+        """Return all contract ids for ``employee`` between ``date_from`` and ``date_to``.
+
+        A contract is considered valid if it:
+
+        * ends within the given period,
+        * starts within the given period, or
+        * starts before ``date_from`` and ends after ``date_to`` (or has no end date).
+
+        Parameters
+        ----------
+        employee: recordset of :class:`hr.employee`
+            Employee for which contracts are searched.
+        date_from: date
+            Start of the period.
+        date_to: date
+            End of the period.
+
+        Returns
+        -------
+        list
+            List of contract ids matching the criteria.
+        """
+        clause_1 = ['&', ('date_end', '<=', date_to), ('date_end', '>=', date_from)]
+        clause_2 = ['&', ('date_start', '<=', date_to), ('date_start', '>=', date_from)]
+        clause_3 = ['&', ('date_start', '<=', date_from), '|', ('date_end', '=', False), ('date_end', '>=', date_to)]
+        clause_final = [('employee_id', '=', employee.id), ('state', '=', 'open'), '|', '|'] + clause_1 + clause_2 + clause_3
+        return self.search(clause_final).ids
 
 
 class HrContractAdvantageTemplate(models.Model):
