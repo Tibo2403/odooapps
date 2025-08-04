@@ -39,10 +39,7 @@ class HrContract(models.Model):
                  then first level children and so on) and without duplicata
         """
         structures = self.mapped('struct_id')
-        if not structures:
-            return []
-        # YTI TODO return browse records
-        return list(set(structures._get_parent_structure().ids))
+        return structures._get_parent_structure()
 
     def get_attribute(self, code, attribute):
         return self.env['hr.contract.advantage.template'].search([('code', '=', code)], limit=1)[attribute]
