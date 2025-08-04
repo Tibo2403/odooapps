@@ -1,6 +1,10 @@
+import logging
+
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools.safe_eval import safe_eval
+
+_logger = logging.getLogger(__name__)
 
 
 class HrPayrollStructure(models.Model):
@@ -187,20 +191,44 @@ class HrSalaryRule(models.Model):
         if self.amount_select == 'fix':
             try:
                 return self.amount_fix, float(safe_eval(self.quantity, localdict)), 100.0
-            except:
-                raise UserError(_('Wrong quantity defined for salary rule %s (%s).') % (self.name, self.code))
+            except (ValueError, TypeError, NameError, SyntaxError) as error:
+                _logger.exception(
+                    "Wrong quantity defined for salary rule %s (%s): %s",
+                    self.name,
+                    self.code,
+                    error,
+                )
+                raise UserError(
+                    _('Wrong quantity defined for salary rule %s (%s).')
+                    % (self.name, self.code)
+                )
         elif self.amount_select == 'percentage':
             try:
                 return (float(safe_eval(self.amount_percentage_base, localdict)),
                         float(safe_eval(self.quantity, localdict)),
                         self.amount_percentage)
-            except:
-                raise UserError(_('Wrong percentage base or quantity defined for salary rule %s (%s).') % (self.name, self.code))
+            except (ValueError, TypeError, NameError, SyntaxError) as error:
+                _logger.exception(
+                    "Wrong percentage base or quantity for salary rule %s (%s): %s",
+                    self.name,
+                    self.code,
+                    error,
+                )
+                raise UserError(
+                    _('Wrong percentage base or quantity defined for salary rule %s (%s).')
+                    % (self.name, self.code)
+                )
         else:
             try:
                 safe_eval(self.amount_python_compute, localdict, mode='exec', nocopy=True)
                 return float(localdict['result']), 'result_qty' in localdict and localdict['result_qty'] or 1.0, 'result_rate' in localdict and localdict['result_rate'] or 100.0
             except Exception as ex:
+                _logger.exception(
+                    "Wrong python code defined for salary rule %s (%s): %s",
+                    self.name,
+                    self.code,
+                    ex,
+                )
                 raise UserError(_(
                         """
                         Wrong python code defined for salary rule %s (%s).
@@ -222,13 +250,28 @@ class HrSalaryRule(models.Model):
             try:
                 result = safe_eval(self.condition_range, localdict)
                 return self.condition_range_min <= result and result <= self.condition_range_max or False
-            except:
-                raise UserError(_('Wrong range condition defined for salary rule %s (%s).') % (self.name, self.code))
+            except (ValueError, TypeError, NameError, SyntaxError) as error:
+                _logger.exception(
+                    "Wrong range condition defined for salary rule %s (%s): %s",
+                    self.name,
+                    self.code,
+                    error,
+                )
+                raise UserError(
+                    _('Wrong range condition defined for salary rule %s (%s).')
+                    % (self.name, self.code)
+                )
         else:  # python code
             try:
                 safe_eval(self.condition_python, localdict, mode='exec', nocopy=True)
                 return 'result' in localdict and localdict['result'] or False
             except Exception as ex:
+                _logger.exception(
+                    "Wrong python condition defined for salary rule %s (%s): %s",
+                    self.name,
+                    self.code,
+                    ex,
+                )
                 raise UserError(_(
                         """
                         Wrong python condition defined for salary rule %s (%s).
