@@ -33,3 +33,12 @@ Ce dépôt rassemble une collection de modules communautaires pour Odoo 18 déve
 1. **Cloner** ce dépôt dans le chemin des modules d’Odoo 18 :
    ```bash
    git clone https://github.com/[votre-utilisateur]/odooapps.git
+   ```
+
+2. **Ajouter** le dossier cloné à la configuration d’Odoo, par exemple dans le fichier `odoo.conf` via l’option `addons_path` ou en utilisant `--addons-path` lors du lancement du serveur.
+
+3. **Redémarrer** le serveur Odoo pour prendre en compte les nouveaux modules.
+
+4. **Mettre à jour** la liste des applications depuis l’interface Odoo (mode développeur → *Mettre à jour la liste des applications*).
+
+5. **Installer** les modules souhaités à partir du menu **Apps**.
