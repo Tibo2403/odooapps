@@ -1,5 +1,5 @@
 import calendar
-from datetime import date, datetime
+from datetime import date
 from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models, _
@@ -219,7 +219,7 @@ class AccountAssetAsset(models.Model):
 
     @api.model
     def _cron_generate_entries(self):
-        self.compute_generated_entries(datetime.today())
+        self.compute_generated_entries(fields.Date.today())
 
     @api.model
     def compute_generated_entries(self, date, asset_type=None):

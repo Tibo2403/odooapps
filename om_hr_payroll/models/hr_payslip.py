@@ -22,8 +22,13 @@ class HrPayslip(models.Model):
     employee_id = fields.Many2one('hr.employee', string='Employee', required=True)
     date_from = fields.Date(string='Date From', required=True,
         default=lambda self: fields.Date.to_string(date.today().replace(day=1)))
-    date_to = fields.Date(string='Date To', required=True,
-        default=lambda self: fields.Date.to_string((datetime.now() + relativedelta(months=+1, day=1, days=-1)).date()))
+    date_to = fields.Date(
+        string='Date To',
+        required=True,
+        default=lambda self: fields.Date.to_string(
+            fields.Date.today() + relativedelta(months=+1, day=1, days=-1)
+        ),
+    )
     # this is chaos: 4 states are defined, 3 are used ('verify' isn't) and 5 exist ('confirm' seems to have existed)
     state = fields.Selection([
         ('draft', 'Draft'),
@@ -592,8 +597,11 @@ class HrPayslipRun(models.Model):
         default=lambda self: fields.Date.to_string(date.today().replace(day=1))
     )
     date_end = fields.Date(
-        string='Date To', required=True,
-        default=lambda self: fields.Date.to_string((datetime.now() + relativedelta(months=+1, day=1, days=-1)).date())
+        string='Date To',
+        required=True,
+        default=lambda self: fields.Date.to_string(
+            fields.Date.today() + relativedelta(months=+1, day=1, days=-1)
+        ),
     )
     credit_note = fields.Boolean(
         string='Credit Note',
