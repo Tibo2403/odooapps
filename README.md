@@ -42,3 +42,13 @@ Ce dépôt rassemble une collection de modules communautaires pour Odoo 18 déve
 4. **Mettre à jour** la liste des applications depuis l’interface Odoo (mode développeur → *Mettre à jour la liste des applications*).
 
 5. **Installer** les modules souhaités à partir du menu **Apps**.
+
+## 🧪 Tests
+
+Pour exécuter les tests unitaires des modules, lancez Odoo avec l'option `--test-enable` :
+
+```bash
+odoo -d test_db --addons-path=/chemin/vers/odoo/addons,/chemin/vers/odooapps -i om_account_asset,om_account_budget --test-enable --stop-after-init
+```
+
+Remplacez la liste des modules par ceux que vous souhaitez tester. Les tests peuvent aussi être exécutés via la CI fournie dans ce dépôt.
