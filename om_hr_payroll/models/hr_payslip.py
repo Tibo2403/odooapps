@@ -386,16 +386,20 @@ class HrPayslip(models.Model):
 
     # YTI TODO To rename. This method is not really an onchange, as it is not in any view
     # employee_id and contract_id could be browse records
-    def onchange_employee_id(self, date_from, date_to, employee_id=False, contract_id=False):
-        #defaults
+    def prepare_payslip_data(self, date_from, date_to, employee_id=False, contract_id=False):
+        """Prepare default values for a payslip.
+
+        This helper replaces the former ``onchange_employee_id`` method and
+        returns the initial data required to create a payslip for the given
+        employee and period.
+        """
         res = {
             'value': {
                 'line_ids': [],
-                #delete old input lines
+                # delete old input lines
                 'input_line_ids': [(2, x,) for x in self.input_line_ids.ids],
-                #delete old worked days lines
+                # delete old worked days lines
                 'worked_days_line_ids': [(2, x,) for x in self.worked_days_line_ids.ids],
-                #'details_by_salary_head':[], TODO put me back
                 'name': '',
                 'contract_id': False,
                 'struct_id': False,
