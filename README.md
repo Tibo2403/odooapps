@@ -42,3 +42,7 @@ Ce dépôt rassemble une collection de modules communautaires pour Odoo 18 déve
 4. **Mettre à jour** la liste des applications depuis l’interface Odoo (mode développeur → *Mettre à jour la liste des applications*).
 
 5. **Installer** les modules souhaités à partir du menu **Apps**.
+
+## 📝 Licence
+
+Ce projet est distribué sous la licence [LGPL-3.0](LICENSE).
