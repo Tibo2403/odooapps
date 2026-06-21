@@ -28,6 +28,14 @@ Ce dépôt rassemble une collection de modules communautaires pour Odoo 18 déve
 
 ---
 
+## 🧰 Scripting
+
+La documentation dédiée aux scripts se trouve dans [`scripting/README.md`](scripting/README.md).
+
+Ce dossier est prévu pour centraliser les scripts d’automatisation, de maintenance, d’installation et d’exploitation du dépôt.
+
+---
+
 ## ⚙️ Installation
 
 1. **Cloner** ce dépôt dans le chemin des modules d’Odoo 18 :
